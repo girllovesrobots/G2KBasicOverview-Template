@@ -1,4 +1,13 @@
-﻿using System.Windows;
+﻿﻿using System;
+using System.Collections.Generic;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using System.Drawing;
+
+using Microsoft.Kinect;
 
 namespace K4W.BasicOverview.UI
 {
@@ -7,18 +16,56 @@ namespace K4W.BasicOverview.UI
     /// </summary>
     public partial class MainWindow : Window
     {
+        //-----Image processing initialization variables-----//
+        //Size info for RGB pixel in bitmap form
+        private readonly int _bytePerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
+        /// Representation of the Kinect Sensor
+        private KinectSensor _kinect = null;
+        //Frame reader for color output
+        private ColorFrameReader _colorReader = null;
+        /// FrameReader for our depth output
+        private DepthFrameReader _depthReader = null;
+        /// FrameReader for our infrared output
+        private InfraredFrameReader _infraReader = null;
+        /// FrameReader for our body output
+        private BodyFrameReader _bodyReader = null;
+        /// Color pixel array
+        private byte[] _colorPixels = null;
+        /// Depth output pixel array
+        private byte[] _depthPixels = null;
+        /// Depth value array
+        private ushort[] _depthData = null;
+        /// Infrared output pixel array
+        private byte[] _infraPixels = null;
+        /// Infrared data array
+        private ushort[] _infraData = null;
+        /// All tracked bodies
+        private Body[] _bodies = null;
+        /// Color WriteableBitmap linked to our UI
+        private WriteableBitmap _colorBitmap = null;
+        /// Color WriteableBitmap linked to our UI
+        private WriteableBitmap _depthBitmap = null;
+        /// Infrared WriteableBitmap linked to our UI
+        private WriteableBitmap _infraBitmap = null;
+
+
+        //-----Body tracking initialization variables-----//
+        //Tracked bodies array
+        private Body[] bodies = null;
+        //FrameReader for bodies
+        private BodyFrameReader _bodyReader = null;
+
         public MainWindow()
         {
+
             InitializeComponent();
             //Initialize the Kinect
             InitializeKinect();
 
             //Close Kinect when application is closed
-            Closing += OnClosing
+            Closing += OnClosing;
 
         }
-
-        private KinectSensor _kinect = null;
 
         ///<summary>
         ///Function: InitializeKinect()
@@ -27,7 +74,7 @@ namespace K4W.BasicOverview.UI
         private void InitializeKinect()
         {
             //Get Kinect sensor
-            _kinect = KinectSensor.Default;
+            _kinect = KinectSensor.GetDefault();
 
             if (_kinect==null) return;
 
@@ -39,24 +86,16 @@ namespace K4W.BasicOverview.UI
             InitializeInfrared();
             InitializeBody();    
         }
-        private void OnClosing(object sender, SystemComponentModel.CancelEventArgs e)
+
+        ///<summary>
+        ///Function: OnClosing()
+        ///Description: Turns off the Kinect
+        ///<summary>
+        private void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             //Close Kinect
             if (_kinect != null) _kinect.Close();
         }
-
-        ///<summary>
-        ///Camera Visualization variables
-        ///</summary>
-
-        //Size info for RGB pixel in bitmap form
-        private readonly int _bytePerPixel = (PixelFormats.Bgr32.BitsPerPixel+7)/8;
-        //Frame reader for color output
-        private ColorFrameReader _colorReader = null;
-        //Color pixel array
-        private byte[] _colorPixels = null;
-        //Writeable Bitmap in color that is linked to our UI
-        private WriteableBitmap _colorBitmap = null;
 
         ///<summary>
         ///Function: InitializeCamera()
@@ -69,7 +108,6 @@ namespace K4W.BasicOverview.UI
         ///initialization of a new WriteableBitmap object that is linked to the source
         ///of image control.
         ///</summary>
-
         private void InitializeCamera()
         {
             if (_kinect==null) return;
@@ -91,8 +129,7 @@ namespace K4W.BasicOverview.UI
         ///Function: OnColorFrameArrived
         ///Description: Validates and copies color data stream then outputs to bitmap image.
         ///</summary>
-
-        private void OnColorFrameArrived(object sender, ColorFrameArrivedEventArgs)
+        private void OnColorFrameArrived(object sender, ColorFrameArrivedEventArgs e)
         {
             //Obtain ref to ColorFrame
             ColorFrameReference colorRef = e.FrameReference;
@@ -116,23 +153,16 @@ namespace K4W.BasicOverview.UI
                     else frame.CopyConvertedFrameDataToArray(_colorPixels,ColorImageFormat.Bgra);
 
                     //Copy to bitmap img format
-                    _colorBitmap.WritePixels(new Int32Rec(0,0,frameDesc.Width,frameDesc.Height),_colorPixels
-                                                frameDesc.Width*_bytePerPixel, 0);
+                    _colorBitmap.WritePixels(new Int32Rec(0,0,frameDesc.Width,frameDesc.Height),_colorPixels, 
+                                                    frameDesc.Width*_bytePerPixel, 0);
                 }
             }
         }
 
         ///<summary>
-        ///Depth indication variables:
-        ///FrameReader for our depth output, Array of depth values.
-        ///Array of depth pixels used for the output, Depth WriteableBitmap
-        ///linked to our UI
-        ///</summary>
-        private DepthFrameReader _depthReader = null;
-        private ushort[] _depthData = null;
-        private byte[] _depthPixels = null;
-        private WriteableBitmap _depthBitmap = null;
-
+        ///Function: InitializeDepth()
+        ///Description: Initialize FrameDescription, DepthReader, data/pixel arrays and WriteableBitmap objects
+        ///<summary>
         private void InitializeDepth()
         {
             if (_kinect == null) return;
@@ -151,12 +181,17 @@ namespace K4W.BasicOverview.UI
             _depthReader.FrameArrived += OnDepthFrameArrived;
         }
 
-        private void OnDepthFrameArrived(object sender, DepthFrameArrivedEventArgs)
+        ///<summary>
+        ///Function: OnDepthFrameArrived
+        ///Description: Validates and copies depth data stream then outputs to bitmap image.
+        ///</summary>
+        private void OnDepthFrameArrived(object sender, DepthFrameArrivedEventArgs e)
         {
+            //Ref to depth frame
             DepthFrameReference refer = e.FrameReference;
 
             if (refer == null) return;
-
+            //Get Depth frame
             DepthFrame frame = refer.AcquireFrame();
 
             if (frame == null) return;
@@ -205,17 +240,79 @@ namespace K4W.BasicOverview.UI
         }
 
         ///<summary>
-        ///IR variables initialized below
-        ///Includes IRFrameReader, array of IR data, array of pixels
-        //and Writeable Bitmap object linked to UI to output the IR img
-        ///</summary>
-        private InfraredFrameReader _infraReader = null;
-        private ushort[] _infraData = null;
-        private byte[] _infraPixels = null;
-        private WriteableBitmap _infraBitmap = null;
-
+        ///Function: InitializeInfrared()
+        ///Description: Initialize FrameDescription, DepthReader, data/pixel arrays and WriteableBitmap objects
+        ///<summary>
         private void InitializeInfrared()
         {
+            if (_kinect == null) return;
+            //Get frame desc for color out
+            FrameDescription desc = _kinect.InfraredFrameSource.FrameDescription;
+            //Get frameread for color
+            _infraReader = _kinect.InfraredFrameSource.OpenReader();
+            //Allocate array of pixels
+            _infraData = new ushort[desc.Width*desc.Height];
+            _infraPixels = new byte[desc.Width*desc.Height*_bytePerPixel];
+            //Create new WriteableBitmap
+            _infraBitmap = new WriteableBitmap(desc.Width,desc.Height,96,96,PixelFormats.Bgr32,null);
+            //Linking WriteableBitmap to the user interface
+            InfraredImage.Source = _infraBitmap;
+            //Hook-up event
+            _infraReadeer.FrameArrived += OnInfraredFrameArrived;
+        }
+
+        ///<summary>
+        ///Function: OnInfraredFrameArrived
+        ///Description: Validates and copies infrared data stream then outputs to bitmap image.
+        ///</summary>
+        private void OnInfraredFrameArrived(object sender, InfraredFrameArrivedEventArgs e)
+        {
+            //Ref to infrared frame
+            InfraredFrameReference refer = e.FrameReference;
+
+            if (refer == null) return;
+
+            //Get infrared frame
+            InfraredFrame frame = refer.AcquireFrame();
+
+            if (frame == null) return;
+
+            using(frame)
+            {
+                //Get desc for frame
+                FrameDescription frameDesc = frame.FrameDescription;
+
+                if (((frameDesc.Width*frameDesc.Height)==_infraredData.Length) && (frameDesc.Width == _infraBitmap.PixelWidth) && (frameDesc.Height ==_infraBitmap.PixelHeight))
+                {
+                    //Copy data to array
+                    frame.CopyFrameDataToArray(_infraData);
+                    int colorPixelIndex=0;
+
+                    for (int i = 0; i < _infraData.Length; ++i)
+                    {
+                        //Get IR value
+                        ushort ir = _infraData[i];
+                        //Bitshift the data
+                        byte intensity = (byte)(ir >> 8);
+                        //Assign IR intensity
+                        _infraPixels[colorPixelIndex++] = intensity;
+                        _infraPixels[colorPixelIndex++] = intensity;
+                        _infraPixels[colorPixelIndex++] = intensity;
+
+                        ++colorPixelIndex;
+                    }
+
+                    //Copy out to bitmap object
+                    _infraredBitmap.WritePixels(new Int32Rec(0,0,frameDesc.Width, frameDesc.Height),
+                                            _infraPixels, frameDesc.Width*_bytePerPixel, 0);
+                }
+
+              
+            }
+        }
+
+        private void InitalizeBody()
+        { 
             
         }
 
