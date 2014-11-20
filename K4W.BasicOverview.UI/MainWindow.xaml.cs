@@ -123,8 +123,101 @@ namespace K4W.BasicOverview.UI
         }
 
         ///<summary>
-        ///Depth indication variables
+        ///Depth indication variables:
+        ///FrameReader for our depth output, Array of depth values.
+        ///Array of depth pixels used for the output, Depth WriteableBitmap
+        ///linked to our UI
         ///</summary>
+        private DepthFrameReader _depthReader = null;
+        private ushort[] _depthData = null;
+        private byte[] _depthPixels = null;
+        private WriteableBitmap _depthBitmap = null;
+
+        private void InitializeDepth()
+        {
+            if (_kinect == null) return;
+            //Get the frame description for the color output
+            FrameDescription desc = _kinect.DepthFrameSource.FrameDescription;
+            //Get the framereader for Color
+            _depthReader = _kinect.DepthFrameSource.OpenReader();
+            //Allocate pixel array
+            _depthData = new ushort[desc.Width*desc.Height];
+            _depthPixels = new byte[desc.Width*desc.Height*_bytePerPixel];
+            //Create new WriteableBitmap
+            _depthBitmap = new WriteableBitmap(desc.Width, desc. Height, 96,96,PixelFormats.Bgr32, null);
+            //Link WBMP to UI
+            DepthImage.Source = _depthBitmap;
+            //Hook-up event
+            _depthReader.FrameArrived += OnDepthFrameArrived;
+        }
+
+        private void OnDepthFrameArrived(object sender, DepthFrameArrivedEventArgs)
+        {
+            DepthFrameReference refer = e.FrameReference;
+
+            if (refer == null) return;
+
+            DepthFrame frame = refer.AcquireFrame();
+
+            if (frame == null) return;
+
+            using(frame)
+            {
+                //Copy depth frames
+                frame.CopyFrameDataToArray(_depthData);
+
+                //Get min/max depth
+                ushort minDepth = frame.DepthMinReliableDistance;
+                ushort maxDepth = frame.DepthMaxReliableDistance;
+
+                //Adjust visualization based on depth
+                int colorPixelIndex = 0;
+                for (int i = 0; i< _depthData.length; ++i)
+                {
+                    //get Depth
+                    ushort depth = _depthData[i];
+                    if (depth == 0)
+                    {
+                        _depthPixels[colorPixelIndex++] = 41;
+                        _depthPixels[colorPixelIndex++] = 239;
+                        _depthPixels[colorPixelIndex++] = 242;
+                    }
+                    else if (depth < minDepth || depth > maxDepth)
+                    {
+                        _depthPixels[colorPixelIndex++] = 25;
+                        _depthPixels[colorPixelIndex++] = 0;
+                        _depthPixels[colorPixelIndex++] = 255;
+                    }
+                    else
+                    {
+                        double grey = (Math.Floor((double)depth/250)*12.75);
+                        _depthPixels[colorPixelIndex++] = (byte)grey;
+                        _depthPixels[colorPixelIndex++] = (byte)grey;
+                        _depthPixels[colorPixelIndex++] = (byte)grey;
+                    }
+                //increment color pixel index
+                ++colorPixelIndex;
+                }
+                //output to bitmap
+                _depthBitmap.WritePixels(new Int32Rec(0,0,frameDesc.Width, frameDesc.Height),
+                                            _depthPixels, frameDesc.Width*_bytePerPixel, 0);
+            }
+        }
+
+        ///<summary>
+        ///IR variables initialized below
+        ///Includes IRFrameReader, array of IR data, array of pixels
+        //and Writeable Bitmap object linked to UI to output the IR img
+        ///</summary>
+        private InfraredFrameReader _infraReader = null;
+        private ushort[] _infraData = null;
+        private byte[] _infraPixels = null;
+        private WriteableBitmap _infraBitmap = null;
+
+        private void InitializeInfrared()
+        {
+            
+        }
 
 
         #region UI Methods
