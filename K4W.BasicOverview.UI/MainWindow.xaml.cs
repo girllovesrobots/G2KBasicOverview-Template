@@ -27,8 +27,6 @@ namespace K4W.BasicOverview.UI
         private DepthFrameReader _depthReader = null;
         /// FrameReader for our infrared output
         private InfraredFrameReader _infraReader = null;
-        /// FrameReader for our body output
-        private BodyFrameReader _bodyReader = null;
         /// Color pixel array
         private byte[] _colorPixels = null;
         /// Depth output pixel array
@@ -39,8 +37,6 @@ namespace K4W.BasicOverview.UI
         private byte[] _infraPixels = null;
         /// Infrared data array
         private ushort[] _infraData = null;
-        /// All tracked bodies
-        private Body[] _bodies = null;
         /// Color WriteableBitmap linked to our UI
         private WriteableBitmap _colorBitmap = null;
         /// Color WriteableBitmap linked to our UI
@@ -50,10 +46,10 @@ namespace K4W.BasicOverview.UI
 
 
         //-----Body tracking initialization variables-----//
-        //Tracked bodies array
-        private Body[] bodies = null;
         //FrameReader for bodies
         private BodyFrameReader _bodyReader = null;
+        //Tracked bodies array
+        private Body[] bodies = null;
 
         public MainWindow()
         {
@@ -153,7 +149,7 @@ namespace K4W.BasicOverview.UI
                     else frame.CopyConvertedFrameDataToArray(_colorPixels,ColorImageFormat.Bgra);
 
                     //Copy to bitmap img format
-                    _colorBitmap.WritePixels(new Int32Rec(0,0,frameDesc.Width,frameDesc.Height),_colorPixels, 
+                    _colorBitmap.WritePixels(new Int32Rect(0,0,frameDesc.Width,frameDesc.Height),_colorPixels, 
                                                     frameDesc.Width*_bytePerPixel, 0);
                 }
             }
@@ -207,7 +203,7 @@ namespace K4W.BasicOverview.UI
 
                 //Adjust visualization based on depth
                 int colorPixelIndex = 0;
-                for (int i = 0; i< _depthData.length; ++i)
+                for (int i = 0; i< _depthData.Length; ++i)
                 {
                     //get Depth
                     ushort depth = _depthData[i];
@@ -234,7 +230,7 @@ namespace K4W.BasicOverview.UI
                 ++colorPixelIndex;
                 }
                 //output to bitmap
-                _depthBitmap.WritePixels(new Int32Rec(0,0,frameDesc.Width, frameDesc.Height),
+                _depthBitmap.WritePixels(new Int32Rect(0,0,frameDesc.Width, frameDesc.Height),
                                             _depthPixels, frameDesc.Width*_bytePerPixel, 0);
             }
         }
@@ -303,7 +299,7 @@ namespace K4W.BasicOverview.UI
                     }
 
                     //Copy out to bitmap object
-                    _infraredBitmap.WritePixels(new Int32Rec(0,0,frameDesc.Width, frameDesc.Height),
+                    _infraredBitmap.WritePixels(new Int32Rect(0,0,frameDesc.Width, frameDesc.Height),
                                             _infraPixels, frameDesc.Width*_bytePerPixel, 0);
                 }
 
@@ -311,7 +307,7 @@ namespace K4W.BasicOverview.UI
             }
         }
 
-        private void InitalizeBody()
+        private void InitializeBody()
         { 
             
         }
