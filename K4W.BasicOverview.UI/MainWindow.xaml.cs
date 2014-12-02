@@ -194,6 +194,8 @@ namespace K4W.BasicOverview.UI
 
             using(frame)
             {
+                //Obtain frame desc
+                FrameDescription frameDesc = frame.FrameDescription;
                 //Copy depth frames
                 frame.CopyFrameDataToArray(_depthData);
 
@@ -254,7 +256,7 @@ namespace K4W.BasicOverview.UI
             //Linking WriteableBitmap to the user interface
             InfraredImage.Source = _infraBitmap;
             //Hook-up event
-            _infraReadeer.FrameArrived += OnInfraredFrameArrived;
+            _infraReader.FrameArrived += OnInfraredFrameArrived;
         }
 
         ///<summary>
@@ -278,7 +280,7 @@ namespace K4W.BasicOverview.UI
                 //Get desc for frame
                 FrameDescription frameDesc = frame.FrameDescription;
 
-                if (((frameDesc.Width*frameDesc.Height)==_infraredData.Length) && (frameDesc.Width == _infraBitmap.PixelWidth) && (frameDesc.Height ==_infraBitmap.PixelHeight))
+                if (((frameDesc.Width*frameDesc.Height)==_infraData.Length) && (frameDesc.Width == _infraBitmap.PixelWidth) && (frameDesc.Height ==_infraBitmap.PixelHeight))
                 {
                     //Copy data to array
                     frame.CopyFrameDataToArray(_infraData);
@@ -299,7 +301,7 @@ namespace K4W.BasicOverview.UI
                     }
 
                     //Copy out to bitmap object
-                    _infraredBitmap.WritePixels(new Int32Rect(0,0,frameDesc.Width, frameDesc.Height),
+                    _infraBitmap.WritePixels(new Int32Rect(0,0,frameDesc.Width, frameDesc.Height),
                                             _infraPixels, frameDesc.Width*_bytePerPixel, 0);
                 }
 

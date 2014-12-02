@@ -7,3 +7,9 @@ C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\
 C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\obj\Debug\K4W.BasicOverview.UI.g.resources
 C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\obj\Debug\K4W.BasicOverview.UI.Properties.Resources.resources
 C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\obj\Debug\K4W.BasicOverview.UI.csproj.GenerateResource.Cache
+C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\bin\Debug\K4W.BasicOverview.UI.exe
+C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\bin\Debug\K4W.BasicOverview.UI.pdb
+C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\bin\Debug\Microsoft.Kinect.dll
+C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\bin\Debug\Microsoft.Kinect.xml
+C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\obj\Debug\K4W.BasicOverview.UI.exe
+C:\Users\personal robots\Desktop\G2KBasicOverview-Template\K4W.BasicOverview.UI\obj\Debug\K4W.BasicOverview.UI.pdb
