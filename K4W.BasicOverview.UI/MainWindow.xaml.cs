@@ -311,10 +311,102 @@ namespace K4W.BasicOverview.UI
 
         private void InitializeBody()
         { 
+            if (_kinect == null) return;
             
+            //Fill array of bodies
+            _bodies = new Body[_kinect.BodyFrameSource.BodyCount];
+            
+            //Open body reader
+            _bodyReader = _kinect.BodyFrameSource.OpenReader();
+
+            //Hook-up event
+            _bodyReader.FrameArrived += OnBodyFrameArrived;
+
         }
 
+        private void OnBodyFrameArrived(object sender, BodyFrameArrivedEventArgs e)
+        {
+            //Get reference frame
+            BodyFrameReference refer = e.FrameReference;
 
+            if (refer == null) return;
+
+            using (frame)
+            {
+                //Obtain body data
+                Frame.GetAndRefreshBodyData(_bodies);
+                //Clear canvas
+                SkeletonCanvas.Children.Clear();
+                //Loop through all bodes
+                foreach (Body body in _bodies)
+                { 
+                    //Process bodies that are being tracked
+                    if (body.IsTracked)
+                    {
+                        DrawBody(body);
+                    }
+                }
+            }
+        }
+
+        private void DrawBody(Body body)
+        { 
+        //Draw points
+        foreach (JointType type in body.Joints.Keys)
+            //Draw all joints
+            switch (type)
+            { 
+                case JointType.Head:
+                case JointType.FootLeft:
+                case JointType.FootRight:
+                    DrawJoint(body.Joints[type], 20, Brushes.Red, 2, Brushes.Pink);
+                    break;
+                case JointType.ShoulderLeft:
+                case JointType.ShoulderRight:
+                case JointType.HipLeft:
+                case JointType.HipRight:
+                    DrawJoint(body.Joints[type], 20, Brushes.Blue, 2, Brushes.SkyBlue);
+                    break;
+                case JointType.ElbowLeft:
+                case JointType.ElbowLeft:
+                case JointType.KneeLeft:
+                case JointType.KneeRight:
+                    DrawJoint(body.Joints[type], 15, Brushes.Green, 2, Brushes.Honeydew);
+                    break;
+                case JointType.HandLeft:
+                    DrawHandJoint(body.Joints[type], body.HandLeftState, 20, 2, Brushes.Orange);
+                    break;
+                case JointType.HandRight:
+                    DrawHandJoint(body.Joints[type], body.HandRightState, 20, 2, Brushes.Orange);
+                    break;
+                default:
+                    DrawJoint(body.Joints[type], 15, Brushes.Purple, 2, Brushes.Plum);
+                    break;
+            
+            }
+        }
+
+        private void DrawJoin(Joint joint, double radius, SolidColorBrush fill, double borderWidth, SolidColorBrush border)
+        {
+            if (joint.TrackingState != TrackingState.Tracked) return;
+            //Map Camera point to Colorspace
+            ColorSpacePoint colorPoint = _kinect.CoordinateMapper.MapCameraPointsToColorSpace(joint.position);
+            //Create UI object
+            Ellipse el = new Ellipse();
+            el.Fill = fill;
+            el.Stroke = border;
+            el.StrokeThickness = borderWidth;
+            el.Width = el.Height = radius;
+            //Put Ellipse on canvas
+            SkeletonCanvas.Children.Add(el);
+
+            //Take care of edge case when point is at infinity
+            if (float.IsInfinity(colorPoint.X) || float.IsInfinity(colorPoint.X)) return;
+            
+            //Align ellipse on canvas
+            Canvas.SetLeft(el, colorPoint.X/2.0;)
+            Canvas.SetTop(el, colorPoint.Y/2);
+        }
         #region UI Methods
 
         private void OnToggleCamera(object sender, RoutedEventArgs e)
