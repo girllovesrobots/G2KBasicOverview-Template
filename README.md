@@ -1,6 +1,6 @@
 ﻿Author: Wei Low
 
-Last Modified: 25 November 2014
+Last Modified: 10 January 2015
 
 Description: Template used for G2K tutorial to get a basic overview of Kinect 2nd Gen functionality. References/source link found below.
 
